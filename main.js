@@ -10,7 +10,7 @@ const GRAVITY = 0.2
 
 let id = 0;
 
-background.width = 690;
+background.width = 800;
 background.height = 600
 
 b.fillRect(0,0,background.width, background.height);
@@ -20,7 +20,7 @@ function init(){
     class Player{
         constructor({position, velocity}){
 
-            this.position = position;
+            this.position = position;//{x:10, y:10}
             this.velocity = velocity;
             this.width = 70;
             this.height = 70;
@@ -108,7 +108,7 @@ function init(){
                 if(
                     bird.position.x + bird.width - 5> this.position.x &&
                     bird.position.x < this.position.x + this.width &&
-                    bird.position.y + 5 < this.height
+                    bird.position.y - 5 < this.height
                 ){
                     bird.color = "red"
                     bird.collition = true
@@ -130,6 +130,7 @@ function init(){
                 !this.birdPass
             ){
                 counter.score ++
+                this.velocity.y += .5
                 this.birdPass = true
             }
 
@@ -142,9 +143,10 @@ function init(){
             this.position.x -= this.velocity.x
 
             if(this.position.x + this.width < 0){
+
                 this.restart()
             }
-
+            console.log(counter.score)
             this.draw()
         }
 
@@ -196,12 +198,11 @@ function init(){
 
     for(let ob of obs){
         setTimeout(()=>{
-            ob.onGame = true;
+          ob.onGame = true;
         },ob.time)
     }
 
     let counter = new Counter()
-
 
     function animate(){
 
@@ -212,9 +213,10 @@ function init(){
         bird.update()
 
 
+
         for(let ob of obs){
             if(ob.onGame){
-                ob.update()
+              ob.update()
             }
         }
 
@@ -227,6 +229,8 @@ function init(){
             audio.pause()
             audio.currentTime = 0
         }
+
+
 
         counter.draw()
     }
@@ -244,6 +248,13 @@ function init(){
         }
     })
 
+    window.addEventListener("touchstart", e=>{
+      if(!bird.isFly){
+          bird.fly()
+          bird.isFly = true;
+      }
+    })
+
     window.addEventListener("keyup", e=>{
         switch(e.key){
             case ' ':{
@@ -253,6 +264,12 @@ function init(){
             }
         }
     })
+
+    window.addEventListener("touchend", e=>{
+      if(bird.isFly){
+          bird.isFly = false;
+      }
+    })
 }
 
 newGame()
@@ -261,11 +278,12 @@ function newGame(){
   console.log("entra")
   b.strokeStyle = "white"
   b.lineWidth = 10
-  b.strokeRect(25,25 ,640, 550)
+  b.strokeRect(25,25 ,750, 550)
   b.fillStyle = "white"
   b.font = "30px serif"
-  b.fillText("Para iniciar presiona Space", 180, 300)
+  b.fillText("Para iniciar presiona Space", 250, 300)
   window.addEventListener("keydown", start)
+  window.addEventListener("touchstart", start2)
 }
 
 function start(e){
@@ -275,3 +293,9 @@ function start(e){
     window.removeEventListener("keydown", start)
   }
 }
+
+function start2(e){
+  init()
+  audio.play()
+  window.removeEventListener("touchstart", start2)
+}2
