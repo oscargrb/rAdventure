@@ -8,15 +8,56 @@ audio.muted = false
 
 const GRAVITY = 0.2
 
-let id = 0;
 
-background.width = 800;
+
+
+background.width = window.innerWidth;
 background.height = 600
 
 b.fillRect(0,0,background.width, background.height);
 
 
 function init(){
+    let id = 0;
+    let idFood = 0
+    let obsVelocityX = 1.5
+
+    class Food{
+      constructor({position}){
+        this.position = position
+        this.id = idFood
+        idFood ++
+        this.velocity = {
+          x:obsVelocityX,
+          y:0
+        }
+
+        this.color = "blue"
+        this.width = 45
+        this.height = 40
+        this.onGame = false
+        this.img = document.createElement("img")
+        this.img.src = "img/food.png"
+      }
+
+      draw(){
+        const {x,y} = this.position
+        b.fillStyle = this.color
+        //b.fillRect(x,y,this.width, this.height)
+
+        b.drawImage(this.img, x,y, this.width, this.height)
+      }
+
+      update(){
+        this.position.x -= this.velocity.x
+        if(this.position.x + this.width < 0){
+            foods = foods.filter(food=> food.id != this.id)
+            console.log(foods)
+        }
+        this.draw()
+      }
+    }
+
     class Player{
         constructor({position, velocity}){
 
@@ -84,7 +125,7 @@ function init(){
                 y: this.originalPosition.y
             }
             this.velocity = {
-                x:1.5,
+                x:obsVelocityX,
                 y:0.3
             }
             this.color="green"
@@ -143,33 +184,18 @@ function init(){
             this.position.x -= this.velocity.x
 
             if(this.position.x + this.width < 0){
-
-                this.restart()
+                obs = obs.filter(ob=> ob.id != this.id)
             }
-            console.log(counter.score)
+
             this.draw()
         }
 
-        restart(){
-            let rPosition = Math.random()>.5?"top":"bottom"
-
-            this.type = rPosition
-
-            this.originalPosition.y = rPosition=="top"?0:background.height-this.height
-
-            this.position = {
-                x: this.originalPosition.x,
-                y: this.originalPosition.y
-            }
-
-
-        }
     }
 
     class Counter{
         constructor(){
             this.position = {
-                x:600,
+                x:background.width - 100,
                 y:100
             }
             this.color="white"
@@ -190,19 +216,13 @@ function init(){
     })
     bird.draw()
 
-    let obs = [
-        new Obstacule(Math.random()>.5?"top":"bottom",0),
-        new Obstacule(Math.random()>.5?"top":"bottom",3000),
-        new Obstacule(Math.random()>.5?"top":"bottom",6000),
-    ]
-
-    for(let ob of obs){
-        setTimeout(()=>{
-          ob.onGame = true;
-        },ob.time)
-    }
+    let obs = []
 
     let counter = new Counter()
+
+    let foods = []
+
+    let ob,food
 
     function animate(){
 
@@ -210,15 +230,60 @@ function init(){
         b.fillStyle = 'black'
         b.fillRect(0,0,background.width, background.height);
 
-        bird.update()
+        // foods
+        if(
+          foods.filter(food=> food.onGame).length==0 ||
+          background.width - foods[foods.length-1].position.x > 100
+        ){
+          console.log("inside here")
+          food = new Food({
+            position:{
+              x:background.width,
+              y:background.height * Math.random()
+            }
+          })
 
+          food.onGame = true
+          foods.push(food)
+        }
+        for(let food of foods){
+            if(food.onGame){
+              food.update()
 
+              //LEVEL
+              if(counter.score > 0 && counter.score % 5 == 0){
+                obsVelocityX += 0.001
+                food.velocity.x = obsVelocityX
+              }
+            }
+        }
+        // END foods
 
+        // OBS
+        if(obs.filter(ob=> ob.onGame).length==0){
+          ob = new Obstacule(Math.random()>.5?"top":"bottom")
+          ob.onGame = true
+          obs.push(ob)
+        }
+        if(background.width - obs[obs.length-1].position.x > 300){
+          let ob = new Obstacule(Math.random()>.5?"top":"bottom")
+          ob.onGame = true
+          obs.push(ob)
+          console.log(obs)
+        }
         for(let ob of obs){
             if(ob.onGame){
               ob.update()
+
+              //LEVEL
+              if(counter.score > 0 && counter.score % 5 == 0){
+                obsVelocityX += 0.001
+                ob.velocity.x = obsVelocityX
+              }
+
             }
         }
+        // END OBS
 
         if(bird.collition){
             bird.color = "red";
@@ -230,7 +295,7 @@ function init(){
             audio.currentTime = 0
         }
 
-
+        bird.update()
 
         counter.draw()
     }
@@ -272,16 +337,18 @@ function init(){
     })
 }
 
-newGame()
+window.addEventListener("load", ()=>{
+  newGame()
+})
 
 function newGame(){
-  console.log("entra")
+
   b.strokeStyle = "white"
   b.lineWidth = 10
-  b.strokeRect(25,25 ,750, 550)
+  b.strokeRect(25,25 ,background.width - 50, 550)
   b.fillStyle = "white"
   b.font = "30px serif"
-  b.fillText("Para iniciar presiona Space", 250, 300)
+  b.fillText("Para iniciar presiona Space", background.width/2 - 150, 300)
   window.addEventListener("keydown", start)
   window.addEventListener("touchstart", start2)
 }
